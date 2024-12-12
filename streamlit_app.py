@@ -1,6 +1,8 @@
 import streamlit as st
 from pyzipcode import ZipCodeDatabase
 import pandas as pd
+import folium
+from streamlit_folium import st_folium
 
 # Initialize ZipCodeDatabase
 zcdb = ZipCodeDatabase()
@@ -19,13 +21,30 @@ def main():
             input_zip_codes = [z.strip() for z in zip_codes_input.splitlines() if z.strip().isdigit()]
             if input_zip_codes:
                 results = []
+                map_center = None
+                map_instance = None
 
                 for zip_code in input_zip_codes:
                     try:
                         origin = zcdb[zip_code]
                         nearby = zcdb.get_zipcodes_around_radius(origin.zip, radius)
+                        if map_center is None:
+                            map_center = (origin.latitude, origin.longitude)
+                            map_instance = folium.Map(location=map_center, zoom_start=10)
+                        
+                        folium.Marker(
+                            [origin.latitude, origin.longitude],
+                            popup=f"Origin ZIP: {zip_code}",
+                            icon=folium.Icon(color="red")
+                        ).add_to(map_instance)
+
                         for z in nearby:
                             results.append({"Provided ZIP": zip_code, "Matched ZIP": z.zip})
+                            folium.Marker(
+                                [z.latitude, z.longitude],
+                                popup=f"Matched ZIP: {z.zip}",
+                                icon=folium.Icon(color="blue")
+                            ).add_to(map_instance)
                     except Exception as e:
                         results.append({"Provided ZIP": zip_code, "Matched ZIP": f"Error: {e}"})
 
@@ -34,6 +53,11 @@ def main():
 
                 # Display results
                 st.write("Results:", results_df)
+
+                # Display map
+                if map_instance:
+                    st.write("Map of Results:")
+                    st_folium(map_instance, width=700, height=500)
 
                 # Download CSV button
                 csv = results_df.to_csv(index=False)
