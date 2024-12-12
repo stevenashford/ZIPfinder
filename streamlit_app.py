@@ -11,6 +11,12 @@ zcdb = ZipCodeDatabase()
 def main():
     st.title("ZIP Code Radius Finder")
 
+    # Initialize session state
+    if "results_df" not in st.session_state:
+        st.session_state.results_df = None
+    if "map_instance" not in st.session_state:
+        st.session_state.map_instance = None
+
     # Input: List of ZIP codes and radius
     zip_codes_input = st.text_area("Enter ZIP codes (one per line):")
     radius = st.number_input("Enter the radius (in miles):", min_value=0.0, value=10.0, step=1.0)
@@ -49,28 +55,30 @@ def main():
                         results.append({"Provided ZIP": zip_code, "Matched ZIP": f"Error: {e}"})
 
                 # Convert results to DataFrame
-                results_df = pd.DataFrame(results)
-
-                # Display results
-                st.write("Results:", results_df)
-
-                # Display map
-                if map_instance:
-                    st.write("Map of Results:")
-                    st_folium(map_instance, width=700, height=500)
-
-                # Download CSV button
-                csv = results_df.to_csv(index=False)
-                st.download_button(
-                    label="Download CSV",
-                    data=csv,
-                    file_name="zip_code_results.csv",
-                    mime="text/csv"
-                )
+                st.session_state.results_df = pd.DataFrame(results)
+                st.session_state.map_instance = map_instance
             else:
                 st.error("Please enter valid ZIP codes.")
         else:
             st.error("Please enter at least one ZIP code.")
+
+    # Display results
+    if st.session_state.results_df is not None:
+        st.write("Results:", st.session_state.results_df)
+
+        # Display map
+        if st.session_state.map_instance:
+            st.write("Map of Results:")
+            st_folium(st.session_state.map_instance, width=700, height=500)
+
+        # Download CSV button
+        csv = st.session_state.results_df.to_csv(index=False)
+        st.download_button(
+            label="Download CSV",
+            data=csv,
+            file_name="zip_code_results.csv",
+            mime="text/csv"
+        )
 
 if __name__ == "__main__":
     main()
