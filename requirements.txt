@@ -1,3 +1,5 @@
 streamlit
 pyzipcode
 folium
+streamlit-folium
+pandas
