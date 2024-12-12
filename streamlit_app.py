@@ -38,6 +38,16 @@ def main():
                             map_center = (origin.latitude, origin.longitude)
                             map_instance = folium.Map(location=map_center, zoom_start=10)
                         
+                        # Add circle boundary
+                        folium.Circle(
+                            location=(origin.latitude, origin.longitude),
+                            radius=radius * 1609.34,  # Convert miles to meters
+                            color="green",
+                            fill=True,
+                            fill_opacity=0.2
+                        ).add_to(map_instance)
+                        
+                        # Add marker for origin ZIP
                         folium.Marker(
                             [origin.latitude, origin.longitude],
                             popup=f"Origin ZIP: {zip_code}",
